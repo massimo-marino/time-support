@@ -6,7 +6,7 @@ SET (CMAKE_CXX_COMPILER g++)
 
 SET (CMAKE_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu")
 
-SET (CMAKE_CXX_FLAGS "-std=c++14 -m64 -Ofast -pthread -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -I/usr/include -I/usr/local/include -I. -I.. -lm -lrt -ldl -lgtest_dll -lgtest_main")
+SET (CMAKE_CXX_FLAGS "-std=c++14 -m64 -Ofast -ffast-math -fwhole-program -pthread -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -I/usr/include -I/usr/local/include -I. -I.. -lm -lrt -ldl -lgtest_dll -lgtest_main")
 
 SET( CMAKE_VERBOSE_MAKEFILE on )
 

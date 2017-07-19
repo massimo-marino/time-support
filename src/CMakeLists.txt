@@ -5,7 +5,7 @@ PROJECT( timeSupport )
 SET (CMAKE_CXX_COMPILER g++)
 
 SET (CMAKE_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu")
-SET (CMAKE_CXX_FLAGS "-std=c++14 -m64 -Ofast -pthread -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -I/usr/include -I. -lm -lrt")
+SET (CMAKE_CXX_FLAGS "-std=c++14 -m64 -Ofast -ffast-math -fno-rtti -pthread -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -I/usr/include -I. -lm -lrt")
 
 SET( CMAKE_VERBOSE_MAKEFILE on )
 
