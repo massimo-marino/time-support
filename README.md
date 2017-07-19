@@ -4,6 +4,7 @@ a C++14 implementation of a stopwatch (a timer) for testing speed at hot spots.
 ## Requirements
 
 The cmake file compiles with `-std=c++14`.
+The code is only for linux 64 bit arch.
 
 ## Install and Run Unit Tests
 
