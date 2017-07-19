@@ -56,18 +56,23 @@ rdtscTimer::~rdtscTimer()
 
 void rdtscTimer::report() noexcept
 {
-  m_log << m_timerName << ": " << m_startPointLabel << " -> " << m_stopPointLabel
-        << ": Timer started at "
-        << m_start
-        <<  " and stopped at "
-        << m_stop
-        << " taking "
-        << m_stop - m_start
-        << " ticks - "
-        << getStopLapsed_sec()
-        << " sec ["
-        << getStopLapsed_nsec()
-        << " nsec]"
-        << std::endl;
+  if ( rdtscTimerStatus::STOPPED == getRDTSCTimerStatus() )
+  {
+    m_log << m_timerName << ": " << m_startPointLabel << " -> " << m_stopPointLabel
+          << ": Timer started at "
+          << m_start
+          <<  " and stopped at "
+          << m_stop
+          << " taking "
+          << m_stop - m_start
+          << " ticks - "
+          << getStopLapsed_sec()
+          << " sec ["
+          << getStopLapsed_nsec()
+          << " nsec]"
+          << std::endl;
+
+    setRDTSCTimerStatus(rdtscTimerStatus::REPORTED);
+  }
 }
 }  // namespace timeSupport

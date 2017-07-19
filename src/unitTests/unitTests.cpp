@@ -188,7 +188,7 @@ TEST(timeSupport, rdtscTest_3)
   }
 
   auto overrunAverage{overruns/(loopsNumber - doNotCount)};
-  std::cout << "overrun average: " << overrunAverage << " ticks over " << loopsNumber << " loops" << std::endl;
+  std::cout << "overrun average: " << overrunAverage << " ticks over " << loopsNumber - doNotCount << " loops" << std::endl;
 
   EXPECT_LT(overrunAverage,55);
 }
@@ -261,7 +261,52 @@ TEST(timeSupport, rdtscTest_5)
   EXPECT_GE(rdtsct.getStopLapsed_nsec(), 1'000'000'000);
 }
 
-// this test needs su rights
+////////////////////////////////////////////////////////////////////////////////
+// the following tests need su rights
+
+int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
+{
+  int ret{};
+
+  // work on the currently running thread.
+  pthread_t this_thread{pthread_self()};
+  // struct sched_param is used to store the scheduling priority
+  struct sched_param params{};
+
+  // set the priority to the maximum.
+  params.sched_priority = sched_get_priority_max(algo);
+
+//  std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
+
+  // attempt to set thread real-time priority to the algo policy
+  ret = pthread_setschedparam(this_thread, algo, &params);
+  if ( 0 != ret )
+  {
+    // print the error
+    std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
+    return -1;
+  }
+  // verify the change in thread priority
+  int policy{0};
+  ret = pthread_getschedparam(this_thread, &policy, &params);
+  if ( 0 != ret )
+  {
+    std::cout << "Couldn't retrieve real-time scheduling paramers" << std::endl;
+    return -1;
+  }
+
+  // check the correct policy was applied
+  if ( policy != algo )
+  {
+    std::cout << "Scheduling is NOT " << algo << std::endl;
+  }
+
+  // print thread scheduling priority
+  //std::cout << "Thread priority is " << params.sched_priority << std::endl;
+
+  return policy;
+}
+
 TEST(timeSupport, rdtscTest_6)
 {
   int which{PRIO_PROCESS};
@@ -276,10 +321,13 @@ TEST(timeSupport, rdtscTest_6)
   ASSERT_EQ(ret,0);
   ASSERT_EQ(errNo,0);
 
+  ASSERT_EQ(setRealtimePriority(SCHED_FIFO),SCHED_FIFO);
+  //ASSERT_EQ(setRealtimePriority(SCHED_RR),SCHED_RR);
+
   // logs to std::cout by default
   timeSupport::rdtscTimer rdtsct{"T6"};
   uint_fast64_t waitTicks{10'000};
-  uint_fast64_t loopsNumber{1'000'000};
+  uint_fast64_t loopsNumber{2'000'000};
   uint_fast64_t overruns{0};
   uint_fast64_t doNotCount{0};
   uint_fast64_t loopStop{};
@@ -314,10 +362,11 @@ TEST(timeSupport, rdtscTest_6)
   }
 
   auto overrunAverage{overruns/(loopsNumber - doNotCount)};
-  std::cout << "overrun average: " << overrunAverage << " ticks over " << loopsNumber << " loops" << std::endl;
+  std::cout << "overrun average: " << overrunAverage << " ticks over " << loopsNumber - doNotCount << " loops" << std::endl;
 
   EXPECT_LT(overrunAverage,55);
 }
+
 //int main(int argc, char **argv) {
 //  ::testing::InitGoogleTest(&argc, argv);
 //  return RUN_ALL_TESTS();

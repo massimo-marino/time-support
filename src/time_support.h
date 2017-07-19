@@ -41,7 +41,7 @@ inline void rdtsc(uint_fast64_t& r) noexcept
 ////////////////////////////////////////////////////////////////////////////////
 class rdtscTimer
 {
-  enum class rdtscTimerStatus { INACTIVE, STARTED, STOPPED };
+  enum class rdtscTimerStatus { INACTIVE, STARTED, STOPPED, REPORTED };
 
  public:
   explicit rdtscTimer(const std::string& timerName = "rdtscTimer",
@@ -102,7 +102,10 @@ class rdtscTimer
 
   inline uint_fast64_t getStopLapsedTSC() noexcept
   {
-    if ( rdtscTimerStatus::STOPPED == getRDTSCTimerStatus() )
+    auto s = getRDTSCTimerStatus();
+
+    if ( (rdtscTimerStatus::STOPPED == s) ||
+         (rdtscTimerStatus::REPORTED == s) )
     {
       return (m_stop - m_start);
     }
@@ -111,7 +114,10 @@ class rdtscTimer
 
   inline double getStopLapsed_sec() noexcept
   {
-    if ( rdtscTimerStatus::STOPPED == getRDTSCTimerStatus() )
+    auto s = getRDTSCTimerStatus();
+
+    if ( (rdtscTimerStatus::STOPPED == s) ||
+         (rdtscTimerStatus::REPORTED == s) )
     {
       return std::chrono::duration_cast<std::chrono::duration<double>>(m_tstop - m_tstart).count();
     }
@@ -120,7 +126,10 @@ class rdtscTimer
 
   inline unsigned getStopLapsed_msec() noexcept
   {
-    if ( rdtscTimerStatus::STOPPED == getRDTSCTimerStatus() )
+    auto s = getRDTSCTimerStatus();
+
+    if ( (rdtscTimerStatus::STOPPED == s) ||
+         (rdtscTimerStatus::REPORTED == s) )
     {
       return (unsigned)(std::chrono::duration_cast<std::chrono::milliseconds>(m_tstop - m_tstart).count());
     }
@@ -129,7 +138,10 @@ class rdtscTimer
 
   inline unsigned getStopLapsed_usec() noexcept
   {
-    if ( rdtscTimerStatus::STOPPED == getRDTSCTimerStatus() )
+    auto s = getRDTSCTimerStatus();
+
+    if ( (rdtscTimerStatus::STOPPED == s) ||
+         (rdtscTimerStatus::REPORTED == s) )
     {
       return (unsigned)(std::chrono::duration_cast<std::chrono::microseconds>(m_tstop - m_tstart).count());
     }
@@ -138,7 +150,10 @@ class rdtscTimer
 
   inline unsigned getStopLapsed_nsec() noexcept
   {
-    if ( rdtscTimerStatus::STOPPED == getRDTSCTimerStatus() )
+    auto s = getRDTSCTimerStatus();
+
+    if ( (rdtscTimerStatus::STOPPED == s) ||
+         (rdtscTimerStatus::REPORTED == s) )
     {
       return (unsigned)(std::chrono::duration_cast<std::chrono::nanoseconds>(m_tstop - m_tstart).count());
     }
