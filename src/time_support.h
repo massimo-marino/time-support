@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <map>
 ////////////////////////////////////////////////////////////////////////////////
 namespace timeSupport
 {
@@ -41,17 +42,15 @@ inline void rdtsc(uint_fast64_t& r) noexcept
 ////////////////////////////////////////////////////////////////////////////////
 class rdtscTimer
 {
-  enum class rdtscTimerStatus { INACTIVE, STARTED, STOPPED, REPORTED };
-
  public:
   explicit rdtscTimer(const std::string& timerName = "rdtscTimer",
                       std::ostream& log = std::cout);
 
   ~rdtscTimer();
 
-  inline rdtscTimer* start(const std::string& startPoint = "") noexcept
+  inline rdtscTimer& start(const std::string& startPoint = "") noexcept
   {
-    setRDTSCTimerStatus(rdtscTimerStatus::STARTED);
+    setTimerStatus(rdtscTimerStatus::STARTED);
     if ( "" == startPoint )
     {
       m_startPointLabel = m_timerName + m_startPointLabelDefault;
@@ -62,21 +61,21 @@ class rdtscTimer
     }
     m_tstart = std::chrono::high_resolution_clock::now(),
     m_start = rdtsc();
-    return this;
+    return *this;
   }
 
-  inline rdtscTimer* stop(const std::string& stopPoint) noexcept
+  inline rdtscTimer& stop(const std::string& stopPoint) noexcept
   {
     m_stop = rdtsc(),
     m_tstop = std::chrono::high_resolution_clock::now();
-    setRDTSCTimerStatus(rdtscTimerStatus::STOPPED);
+    setTimerStatus(rdtscTimerStatus::STOPPED);
     m_stopPointLabel = std::move(stopPoint);
-    return this;
+    return *this;
   }
 
   inline void stopAndReport(const std::string& stopPoint) noexcept
   {
-    stop(stopPoint)->report();
+    stop(stopPoint).report();
   }
 
   void report() noexcept;
@@ -93,7 +92,7 @@ class rdtscTimer
 
   inline uint_fast64_t getLapsedTSC() noexcept
   {
-    if ( rdtscTimerStatus::STARTED == getRDTSCTimerStatus() )
+    if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
       return (rdtsc() - m_start);
     }
@@ -102,7 +101,7 @@ class rdtscTimer
 
   inline uint_fast64_t getStopLapsedTSC() noexcept
   {
-    auto s = getRDTSCTimerStatus();
+    auto s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -114,7 +113,7 @@ class rdtscTimer
 
   inline double getStopLapsed_sec() noexcept
   {
-    auto s = getRDTSCTimerStatus();
+    auto s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -124,61 +123,73 @@ class rdtscTimer
     return 0;
   }
 
-  inline unsigned getStopLapsed_msec() noexcept
+  inline uint_fast64_t getStopLapsed_msec() noexcept
   {
-    auto s = getRDTSCTimerStatus();
+    auto s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
     {
-      return (unsigned)(std::chrono::duration_cast<std::chrono::milliseconds>(m_tstop - m_tstart).count());
+      return (uint_fast64_t)(std::chrono::duration_cast<std::chrono::milliseconds>(m_tstop - m_tstart).count());
     }
     return 0;
   }
 
-  inline unsigned getStopLapsed_usec() noexcept
+  inline uint_fast64_t getStopLapsed_usec() noexcept
   {
-    auto s = getRDTSCTimerStatus();
+    auto s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
     {
-      return (unsigned)(std::chrono::duration_cast<std::chrono::microseconds>(m_tstop - m_tstart).count());
+      return (uint_fast64_t)(std::chrono::duration_cast<std::chrono::microseconds>(m_tstop - m_tstart).count());
     }
     return 0;
   }
 
-  inline unsigned getStopLapsed_nsec() noexcept
+  inline uint_fast64_t getStopLapsed_nsec() noexcept
   {
-    auto s = getRDTSCTimerStatus();
+    auto s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
     {
-      return (unsigned)(std::chrono::duration_cast<std::chrono::nanoseconds>(m_tstop - m_tstart).count());
+      return (uint_fast64_t)(std::chrono::duration_cast<std::chrono::nanoseconds>(m_tstop - m_tstart).count());
     }
     return 0;
   }
+
+  friend std::ostream& operator<<(std::ostream& os, const rdtscTimer& obj);
+//  friend std::istream& operator>>(std::istream& is, rdtscTimer& obj);
 
  private:
+
+  enum class rdtscTimerStatus { INACTIVE, STARTED, STOPPED, REPORTED };
+
+  static std::map<rdtscTimerStatus,std::string> timerStatusStringMap;
   static const std::string m_startPointLabelDefault;
   static const std::string m_stopPointLabelDefault;
   const std::string m_timerName{};
   mutable std::string m_startPointLabel{};
   mutable std::string m_stopPointLabel{};
   rdtscTimerStatus m_rdtscTimerStatus{rdtscTimerStatus::INACTIVE};
-  std::ostream& m_log{std::cout};
   uint_fast64_t m_start{};
   std::chrono::high_resolution_clock::time_point m_tstart{};
   uint_fast64_t m_stop{};
   std::chrono::high_resolution_clock::time_point m_tstop{};
+  std::ostream& m_log{std::cout};
 
-  inline rdtscTimerStatus getRDTSCTimerStatus() noexcept
+  inline const std::string getTimerStatusString() const noexcept
+  {
+    return timerStatusStringMap[getTimerStatus()];
+  }
+
+  inline rdtscTimerStatus getTimerStatus() const noexcept
   {
     return m_rdtscTimerStatus;
   }
 
-  inline void setRDTSCTimerStatus (const rdtscTimerStatus& s)
+  inline void setTimerStatus (const rdtscTimerStatus& s) noexcept
   {
     m_rdtscTimerStatus = s;
   }
