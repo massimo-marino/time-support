@@ -113,12 +113,131 @@ TEST(timeSupport, TimeSourceCurrentTime)
   }
 }
 
+TEST(timeSupport, stopCalledBeforeStart)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  auto s1 = rdtsct.getTimerStatus();
+  rdtsct.stop("STOP-BEFORE-START");
+  auto s2 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, s2);
+}
+
+TEST(timeSupport, reportCalledWhenNotStopped)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  auto s1 = rdtsct.getTimerStatus();
+  rdtsct.report();
+  auto s2 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, s2);
+}
+
+TEST(timeSupport, reStartAttempt)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  rdtsct.start("START-POINT-1");
+  auto s1 = rdtsct.getTimerStatus();
+  rdtsct.start("START-POINT-2");
+  rdtsct.start("START-POINT-3");
+  auto s2 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, s2);
+}
+
+TEST(timeSupport, reStopAttempt)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  rdtsct.start("START-POINT");
+  rdtsct.stop("STOP-POINT-1");
+  auto s1 = rdtsct.getTimerStatus();
+  rdtsct.stop("STOP-POINT-2");
+  rdtsct.stop("STOP-POINT-3");
+  auto s2 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, s2);
+}
+
+TEST(timeSupport, reReportAttempt)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  rdtsct.start("START-POINT");
+  rdtsct.stop("STOP-POINT-1").report();
+  auto s1 = rdtsct.getTimerStatus();
+  rdtsct.report();
+  rdtsct.report().report();
+  auto s2 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, s2);
+}
+
+TEST(timeSupport, correctFullCycle)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  rdtsct.start("START-POINT").stop("STOP-POINT").report();
+  auto s1 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::REPORTED);
+}
+
+TEST(timeSupport, wrongFullCycle)
+{
+  timeSupport::rdtscTimer rdtsct{"TIMER"};
+
+  std::cout << rdtsct << std::endl;
+
+  rdtsct.report().stop("STOP-POINT").start("START-POINT");
+  auto s1 = rdtsct.getTimerStatus();
+
+  std::cout << rdtsct << std::endl;
+
+  ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::STARTED);
+}
+
 TEST(timeSupport, rdtscTest_1)
 {
   // Only declared. Never used, so no time is measured and no logs are generated
   timeSupport::rdtscTimer rdtsct_1{"T1"};
   timeSupport::rdtscTimer rdtsct_2{"T2"};
   timeSupport::rdtscTimer rdtsct_3{"T3"};
+
+  auto s1 = rdtsct_1.getTimerStatus();
+  auto s2 = rdtsct_2.getTimerStatus();
+  auto s3 = rdtsct_3.getTimerStatus();
+
+  ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::INACTIVE);
+  ASSERT_EQ(s2, timeSupport::rdtscTimer::rdtscTimerStatus::INACTIVE);
+  ASSERT_EQ(s3, timeSupport::rdtscTimer::rdtscTimerStatus::INACTIVE);
 }
 
 TEST(timeSupport, rdtscTest_2)
@@ -277,6 +396,8 @@ TEST(timeSupport, rdtscTest_6)
     rdtsct.start("START-POINT-A");
 
     absnanosleep(10, 0);
+    
+    std::cout << rdtsct << std::endl;
   } // rdtsct's dtor called: stop() and report() called
 
   // print the logs generated in the stringstream
@@ -285,6 +406,8 @@ TEST(timeSupport, rdtscTest_6)
             << ss.str()
             << "-------------------------"
             << std::endl;
+
+  ASSERT_NE(ss.str(), "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

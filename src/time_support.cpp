@@ -32,10 +32,6 @@ m_timerName{timerName},
 m_startPointLabel(m_timerName + m_startPointLabelDefault),
 m_stopPointLabel(m_timerName + m_stopPointLabelDefault),
 m_rdtscTimerStatus(rdtscTimerStatus::INACTIVE),
-m_start(0),
-m_tstart(std::chrono::high_resolution_clock::now()),
-m_stop(0),
-m_tstop(std::chrono::high_resolution_clock::now()),
 m_log(log)
 {}
 
@@ -44,24 +40,29 @@ rdtscTimer::~rdtscTimer()
   // take the stop time and store it in temporary vars, in case it is needed later
   uint_fast64_t stop = rdtsc();
   std::chrono::high_resolution_clock::time_point tstop = std::chrono::high_resolution_clock::now();
+  auto s = getTimerStatus();
+
   // if inactive then leave
-  if ( rdtscTimerStatus::INACTIVE == getTimerStatus() )
+  if ( rdtscTimerStatus::INACTIVE == s )
   {
     return;
   }
   // if started then store the stop temporary values in the class attributes
-  if ( rdtscTimerStatus::STARTED == getTimerStatus() )
+  if ( rdtscTimerStatus::STARTED == s )
   {
     m_stop  = stop;
     m_tstop = tstop;
-    setTimerStatus(rdtscTimerStatus::STOPPED);
+    s = rdtscTimerStatus::STOPPED;
+    setTimerStatus(s);
   }
-  // we are here when the timer was stopped and we have to report the stop
-  // before destruction
-  report();
+  if ( rdtscTimerStatus::STOPPED == s )
+  {
+    // if the timer was stopped we have to report the stop before destruction
+    report();
+  }
 }
 
-void rdtscTimer::report() noexcept
+rdtscTimer& rdtscTimer::report() noexcept
 {
   if ( rdtscTimerStatus::STOPPED == getTimerStatus() )
   {
@@ -80,36 +81,44 @@ void rdtscTimer::report() noexcept
           << std::endl;
 
     setTimerStatus(rdtscTimerStatus::REPORTED);
+
+    return *this;
   }
+
+  m_log << m_timerName << ": "
+        << ": ERROR: report() called but timer is not stopped"
+        << std::endl;
+
+  return *this;
 }
 
 // extraction operator for class rdtscTimer
 std::ostream& operator<<(std::ostream& os, const rdtscTimer& obj)
 {
   // write obj to stream
-  os << "Timer "
+  os << "> Timer "
      << obj.m_timerName
      << " is "
      << (int)obj.getTimerStatus()
      << "/"
      << obj.getTimerStatusString()
      << std::endl
-     << "From: "
+     << "> From: "
      << obj.m_startPointLabel
      << std::endl
-     << "To:   "
+     << "> To:   "
      << obj.m_stopPointLabel
      << std::endl
-     << "Start Tick: "
+     << "> Start Tick: "
      << obj.m_start
      << std::endl
-     << "Stop Tick:  "
+     << "> Stop Tick:  "
      << obj.m_stop
      << std::endl
-     << "Start Time Point: "
+     << "> Start Time Point: "
      << obj.m_tstart.time_since_epoch().count()
      << std::endl
-     << "Stop Time Point:  "
+     << "> Stop Time Point:  "
      << obj.m_tstop.time_since_epoch().count()
      ;
 
