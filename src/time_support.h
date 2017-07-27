@@ -20,22 +20,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 namespace timeSupport
 {
-inline uint_fast64_t rdtsc() noexcept
+inline uint_fast64_t rdtscp() noexcept
 {
   uint_fast32_t tickl {};
   uint_fast32_t tickh {};
 
-  __asm__ __volatile__("rdtsc":"=a"(tickl), "=d"(tickh));
+  __asm__ __volatile__("rdtscp":"=a"(tickl), "=d"(tickh) ::);
 
   return ((static_cast<uint_fast64_t>(tickh) << 32) | tickl);
 }
 
-inline void rdtsc(uint_fast64_t& r) noexcept
+inline void rdtscp(uint_fast64_t& r) noexcept
 {
   uint_fast32_t tickl {};
   uint_fast32_t tickh {};
 
-  __asm__ __volatile__("rdtsc":"=a"(tickl), "=d"(tickh));
+  __asm__ __volatile__("rdtscp":"=a"(tickl), "=d"(tickh) ::);
 
   r = (static_cast<uint_fast64_t>(tickh) << 32) | tickl;
 }
@@ -69,7 +69,7 @@ class rdtscTimer
         m_startPointLabel = startPoint;
       }
       m_tstart = std::chrono::high_resolution_clock::now(),
-      m_start = rdtsc();
+      m_start = rdtscp();
       return *this;
     }
     
@@ -85,7 +85,7 @@ class rdtscTimer
   {
     if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
-      m_stop = rdtsc(),
+      m_stop = rdtscp(),
       m_tstop = std::chrono::high_resolution_clock::now();
       setTimerStatus(rdtscTimerStatus::STOPPED);
       m_stopPointLabel = std::move(stopPoint);
@@ -121,7 +121,7 @@ class rdtscTimer
   {
     if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
-      return (rdtsc() - m_start);
+      return (rdtscp() - m_start);
     }
     return 0;
   }

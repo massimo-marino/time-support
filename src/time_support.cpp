@@ -38,7 +38,7 @@ m_log(log)
 rdtscTimer::~rdtscTimer()
 {
   // take the stop time and store it in temporary vars, in case it is needed later
-  uint_fast64_t stop = rdtsc();
+  uint_fast64_t stop = rdtscp();
   std::chrono::high_resolution_clock::time_point tstop = std::chrono::high_resolution_clock::now();
   auto s = getTimerStatus();
 
