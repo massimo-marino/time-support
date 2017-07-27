@@ -218,6 +218,23 @@ class rdtscTimer
     m_rdtscTimerStatus = s;
   }
 };  // class rdtscTimer
+
+// generic lambda (C++14 onwards)
+decltype(auto) profileFunction =
+  [](rdtscTimer& rdtsct,
+     const std::string& startPoint,
+     const std::string& stopPoint,
+     auto&& func, auto&&... params) // C++14's universal references aka forwarding references
+  {
+    // start timer
+    rdtsct.start(startPoint);
+
+    // invoke function to profile on forwarded params
+    std::forward<decltype(func)>(func)(std::forward<decltype(params)>(params)...);
+
+    // stop timer and report elapsed time
+    rdtsct.stop(stopPoint).report();
+  };
 ////////////////////////////////////////////////////////////////////////////////
 }  // namespace timeSupport
 #endif /* TIME_SUPPORT_H */
