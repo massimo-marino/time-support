@@ -16,7 +16,7 @@ $ cd build
 $ cmake ..
 $ make
 $ cd src/unitTests
-$ ./unitTests
+$ sudo ./unitTests
 ```
 The unit tests provide examples of usage of the class.
 
