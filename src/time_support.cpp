@@ -12,6 +12,7 @@
  */
 
 #include "time_support.h"
+#include <iomanip>
 ////////////////////////////////////////////////////////////////////////////////
 namespace timeSupport
 {
@@ -39,7 +40,9 @@ rdtscTimer::~rdtscTimer()
 {
   // take the stop time and store it in temporary vars, in case it is needed later
   uint_fast64_t&& stop = rdtscp();
+#ifdef CHRONO_TIME
   std::chrono::high_resolution_clock::time_point&& tstop = std::chrono::high_resolution_clock::now();
+#endif
   auto&& s = getTimerStatus();
 
   // if inactive then leave
@@ -51,7 +54,9 @@ rdtscTimer::~rdtscTimer()
   if ( rdtscTimerStatus::STARTED == s )
   {
     m_stop  = stop;
+#ifdef CHRONO_TIME
     m_tstop = tstop;
+#endif
     s = rdtscTimerStatus::STOPPED;
     setTimerStatus(s);
   }
@@ -73,11 +78,16 @@ rdtscTimer& rdtscTimer::report() noexcept
           << m_stop
           << " taking "
           << m_stop - m_start
-          << " ticks [ "
+          << " ticks"
+#ifdef CHRONO_TIME
+          << " [ "
+          <<  std::setprecision(16)
           << getStopLapsed_sec()
           << " sec = "
           << getStopLapsed_nsec()
+          << std::setprecision(5)
           << " nsec ]"
+#endif
           << std::endl;
 
     setTimerStatus(rdtscTimerStatus::REPORTED);
@@ -115,11 +125,13 @@ std::ostream& operator<<(std::ostream& os, const rdtscTimer& obj)
      << "> Stop Tick:  "
      << obj.m_stop
      << std::endl
+#ifdef CHRONO_TIME
      << "> Start Time Point: "
      << obj.m_tstart.time_since_epoch().count()
      << std::endl
      << "> Stop Time Point:  "
      << obj.m_tstop.time_since_epoch().count()
+#endif
      ;
 
   return os;

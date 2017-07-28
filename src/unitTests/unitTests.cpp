@@ -379,17 +379,21 @@ TEST(timeSupport, rdtscTest_5)
             << ss.str();
 
   std::cout << "Ticks counted: " << rdtsct.getStopLapsedTSC() << std::endl;
+#ifdef CHRONO_TIME
   std::cout << "sec   counted: " << rdtsct.getStopLapsed_sec() << std::endl;
   std::cout << "msec  counted: " << rdtsct.getStopLapsed_msec() << std::endl;
   std::cout << "usec  counted: " << rdtsct.getStopLapsed_usec() << std::endl;
   std::cout << "nsec  counted: " << rdtsct.getStopLapsed_nsec() << std::endl;
+#endif
   std::cout << "-------------------------"
             << std::endl;
 
+#ifdef CHRONO_TIME
   EXPECT_GE(rdtsct.getStopLapsed_sec(),  1.0);
   EXPECT_EQ(rdtsct.getStopLapsed_msec(), 1'000);
   EXPECT_GE(rdtsct.getStopLapsed_usec(), 1'000'000);
   EXPECT_GE(rdtsct.getStopLapsed_nsec(), 1'000'000'000);
+#endif
 }
 
 TEST(timeSupport, rdtscTest_6)

@@ -68,7 +68,9 @@ class rdtscTimer
       {
         m_startPointLabel = startPoint;
       }
-      m_tstart = std::chrono::high_resolution_clock::now(),
+#ifdef CHRONO_TIME
+      m_tstart = std::chrono::high_resolution_clock::now();
+#endif
       m_start = rdtscp();
       return *this;
     }
@@ -85,8 +87,10 @@ class rdtscTimer
   {
     if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
-      m_stop = rdtscp(),
+      m_stop = rdtscp();
+#ifdef CHRONO_TIME
       m_tstop = std::chrono::high_resolution_clock::now();
+#endif
       setTimerStatus(rdtscTimerStatus::STOPPED);
       m_stopPointLabel = std::move(stopPoint);
       return *this;
@@ -138,6 +142,7 @@ class rdtscTimer
     return 0;
   }
 
+#ifdef CHRONO_TIME
   inline double getStopLapsed_sec() noexcept
   {
     auto&& s = getTimerStatus();
@@ -149,7 +154,9 @@ class rdtscTimer
     }
     return 0;
   }
+#endif
 
+#ifdef CHRONO_TIME
   inline uint_fast64_t getStopLapsed_msec() noexcept
   {
     auto&& s = getTimerStatus();
@@ -161,7 +168,9 @@ class rdtscTimer
     }
     return 0;
   }
+#endif
 
+#ifdef CHRONO_TIME
   inline uint_fast64_t getStopLapsed_usec() noexcept
   {
     auto&& s = getTimerStatus();
@@ -173,7 +182,9 @@ class rdtscTimer
     }
     return 0;
   }
+#endif
 
+#ifdef CHRONO_TIME
   inline uint_fast64_t getStopLapsed_nsec() noexcept
   {
     auto&& s = getTimerStatus();
@@ -185,6 +196,7 @@ class rdtscTimer
     }
     return 0;
   }
+#endif
 
   inline const std::string getTimerStatusString() const noexcept
   {
@@ -208,9 +220,11 @@ class rdtscTimer
   mutable std::string m_stopPointLabel{};
   rdtscTimerStatus m_rdtscTimerStatus{rdtscTimerStatus::INACTIVE};
   uint_fast64_t m_start{};
-  std::chrono::high_resolution_clock::time_point m_tstart{};
   uint_fast64_t m_stop{};
+#ifdef CHRONO_TIME
+  std::chrono::high_resolution_clock::time_point m_tstart{};
   std::chrono::high_resolution_clock::time_point m_tstop{};
+#endif
   std::ostream& m_log{std::cout};
 
   inline void setTimerStatus (const rdtscTimerStatus& s) noexcept
