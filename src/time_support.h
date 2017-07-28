@@ -52,7 +52,7 @@ class rdtscTimer
 
   inline rdtscTimer& start(const std::string& startPoint = "") noexcept
   {
-    auto s = getTimerStatus();
+    auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::INACTIVE == s) ||
          (rdtscTimerStatus::REPORTED == s) ||
@@ -128,7 +128,7 @@ class rdtscTimer
 
   inline uint_fast64_t getStopLapsedTSC() noexcept
   {
-    auto s = getTimerStatus();
+    auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -140,7 +140,7 @@ class rdtscTimer
 
   inline double getStopLapsed_sec() noexcept
   {
-    auto s = getTimerStatus();
+    auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -152,7 +152,7 @@ class rdtscTimer
 
   inline uint_fast64_t getStopLapsed_msec() noexcept
   {
-    auto s = getTimerStatus();
+    auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -164,7 +164,7 @@ class rdtscTimer
 
   inline uint_fast64_t getStopLapsed_usec() noexcept
   {
-    auto s = getTimerStatus();
+    auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -176,7 +176,7 @@ class rdtscTimer
 
   inline uint_fast64_t getStopLapsed_nsec() noexcept
   {
-    auto s = getTimerStatus();
+    auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
@@ -222,8 +222,8 @@ class rdtscTimer
 // generic lambda (C++14 onwards)
 decltype(auto) profileFunction =
   [](rdtscTimer& rdtsct,
-     const std::string& startPoint,
-     const std::string& stopPoint,
+     const std::string&& startPoint,
+     const std::string&& stopPoint,
      auto&& func, auto&&... params) // C++14's universal references aka forwarding references
   {
     // start timer

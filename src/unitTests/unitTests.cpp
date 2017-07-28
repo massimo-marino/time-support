@@ -13,14 +13,17 @@
 #include <gmock/gmock.h>
 
 using namespace ::testing;
+
+using tspec = struct timespec;
 ////////////////////////////////////////////////////////////////////////////////
-void nanosleep() noexcept
+static void nanoSleep(const time_t& seconds = 0,
+                      const long& nanoseconds = 0) noexcept
 {
-  struct timespec req = { 5, 0 };
-  struct timespec rem{};
+  tspec&& req = { seconds, nanoseconds };
+  tspec&& rem{};
   int ret{};
 
-  retry:
+  RETRY:
   ret = nanosleep (&req, &rem);
   if ( 0 == ret )
   {
@@ -31,7 +34,7 @@ void nanosleep() noexcept
     /* retry, with the provided time remaining */
     req.tv_sec = rem.tv_sec;
     req.tv_nsec = rem.tv_nsec;
-    goto retry;
+    goto RETRY;
   }
   std::cerr << "ERROR: nanosleep()"
             << std::endl;
@@ -40,8 +43,8 @@ void nanosleep() noexcept
 void absnanosleep(const time_t& seconds = 0,
                   const long& nanoseconds = 0) noexcept
 {
-  static clockid_t clock{CLOCK_REALTIME};
-  struct timespec ts{};
+  static const clockid_t&& clock{CLOCK_REALTIME};
+  tspec&& ts{};
 
   clock_gettime(clock, &ts);
 
@@ -53,15 +56,17 @@ void absnanosleep(const time_t& seconds = 0,
 ////////////////////////////////////////////////////////////////////////////////
 TEST(timeSupport, TimeSourceResolution)
 {
-  std::vector<std::pair<std::string,clockid_t>> clockv{ {"CLOCK_REALTIME", CLOCK_REALTIME},
-                                                        {"CLOCK_MONOTONIC", CLOCK_MONOTONIC},
-                                                        {"CLOCK_PROCESS_CPUTIME_ID", CLOCK_PROCESS_CPUTIME_ID},
-                                                        {"CLOCK_THREAD_CPUTIME_ID", CLOCK_THREAD_CPUTIME_ID},
-                                                        {"CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW}
+  const std::vector<std::pair<std::string,clockid_t>> clockv{
+    {"CLOCK_REALTIME", CLOCK_REALTIME},
+    {"CLOCK_MONOTONIC", CLOCK_MONOTONIC},
+    {"CLOCK_PROCESS_CPUTIME_ID", CLOCK_PROCESS_CPUTIME_ID},
+    {"CLOCK_THREAD_CPUTIME_ID", CLOCK_THREAD_CPUTIME_ID},
+    {"CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW}
   };
+
   for (auto&& p : clockv)
   {
-    struct timespec res{};
+    tspec&& res{};
     int ret{};
 
     ret = clock_getres(p.second, &res);
@@ -84,16 +89,17 @@ TEST(timeSupport, TimeSourceResolution)
 
 TEST(timeSupport, TimeSourceCurrentTime)
 {
-  std::vector<std::pair<std::string,clockid_t>> clockv{ {"CLOCK_REALTIME", CLOCK_REALTIME},
-                                                        {"CLOCK_MONOTONIC", CLOCK_MONOTONIC},
-                                                        {"CLOCK_PROCESS_CPUTIME_ID", CLOCK_PROCESS_CPUTIME_ID},
-                                                        {"CLOCK_THREAD_CPUTIME_ID", CLOCK_THREAD_CPUTIME_ID},
-                                                        {"CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW}
+  const std::vector<std::pair<std::string,clockid_t>> clockv{
+    {"CLOCK_REALTIME", CLOCK_REALTIME},
+    {"CLOCK_MONOTONIC", CLOCK_MONOTONIC},
+    {"CLOCK_PROCESS_CPUTIME_ID", CLOCK_PROCESS_CPUTIME_ID},
+    {"CLOCK_THREAD_CPUTIME_ID", CLOCK_THREAD_CPUTIME_ID},
+    {"CLOCK_MONOTONIC_RAW", CLOCK_MONOTONIC_RAW}
   };
   
   for (auto&& p : clockv)
   {
-    struct timespec res{};
+    tspec&& res{};
     int ret{};
 
     ret = clock_gettime(p.second, &res);
@@ -272,13 +278,13 @@ TEST(timeSupport, rdtscTest_3)
 {
   // logs to std::cout by default
   timeSupport::rdtscTimer rdtsct{"T1"};
-  uint_fast64_t waitTicks{10'000};
-  uint_fast64_t loopsNumber{1'000'000};
+  constexpr uint_fast64_t waitTicks{10'000};
+  constexpr uint_fast64_t loopsNumber{1'000'000};
   uint_fast64_t overruns{0};
   uint_fast64_t doNotCount{0};
   uint_fast64_t loopStop{};
 
-  for (uint_fast64_t i{1}; i <= loopsNumber; ++i)
+  for (uint_fast64_t&& i{1}; i <= loopsNumber; ++i)
   {
     // start counting and set the stop tick
     loopStop = waitTicks + rdtsct.start("START-POINT-A").getStartTSC();
@@ -425,12 +431,12 @@ TEST(timeSupport, rdtscTest_7)
 
     timeSupport::rdtscTimer rdtsct{"T7", ss};
 
-    for (unsigned int i = 1; i < 100; ++i)
+    for (unsigned int&& i = 1; i < 100; ++i)
     {
       timeSupport::profileFunction(rdtsct, "START-PROFILE-NOFUN", "STOP-PROFILE-NOFUN", nofun);
     }
     
-    for (unsigned int i = 1; i < 20; ++i)
+    for (unsigned int&& i = 1; i < 20; ++i)
     {
       timeSupport::profileFunction(rdtsct, "START-PROFILE-F", "STOP-PROFILE-F", f, 1);
     }
@@ -496,30 +502,33 @@ int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
 
 TEST(timeSupport, rdtscTest_8)
 {
-  int which{PRIO_PROCESS};
+  constexpr int which{PRIO_PROCESS};
   id_t pid{};
-  int priority{-20};
+  constexpr int priority{-20};
   int ret{};
+  decltype(errno) errNo = errno;
 
   pid = getpid();
   ret = setpriority(which, pid, priority);
-  auto errNo = errno;
+  errNo = errno;
 
   ASSERT_EQ(ret,0);
   ASSERT_EQ(errNo,0);
 
-  ASSERT_EQ(setRealtimePriority(SCHED_FIFO),SCHED_FIFO);
-  //ASSERT_EQ(setRealtimePriority(SCHED_RR),SCHED_RR);
+  // use SCHED_FIFO or SCHED_RR
+  decltype(SCHED_FIFO) algo = SCHED_FIFO;
+
+  ASSERT_EQ(setRealtimePriority(algo),algo);
 
   // logs to std::cout by default
   timeSupport::rdtscTimer rdtsct{"T8"};
-  uint_fast64_t waitTicks{10'000};
-  uint_fast64_t loopsNumber{2'000'000};
+  constexpr uint_fast64_t waitTicks{10'000};
+  constexpr uint_fast64_t loopsNumber{2'000'000};
   uint_fast64_t overruns{0};
   uint_fast64_t doNotCount{0};
   uint_fast64_t loopStop{};
 
-  for (uint_fast64_t i{1}; i <= loopsNumber; ++i)
+  for (uint_fast64_t&& i{1}; i <= loopsNumber; ++i)
   {
     // start counting and set the stop tick
     loopStop = waitTicks + rdtsct.start("START-POINT-A").getStartTSC();
