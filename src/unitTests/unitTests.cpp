@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 #include "../time_support.h"
 #include <typeinfo>
 #include <sys/resource.h>
@@ -15,9 +9,14 @@
 using namespace ::testing;
 
 using tspec = struct timespec;
+// BEGIN: ignore the warnings listed below when compiled with clang from here
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
 ////////////////////////////////////////////////////////////////////////////////
-static void nanoSleep(const time_t& seconds = 0,
-                      const long& nanoseconds = 0) noexcept
+[[maybe_unused]] static inline
+void nanoSleep(const time_t& seconds = 0,
+               const long& nanoseconds = 0) noexcept
 {
   tspec&& req = { seconds, nanoseconds };
   tspec&& rem{};
@@ -37,9 +36,10 @@ static void nanoSleep(const time_t& seconds = 0,
     goto RETRY;
   }
   std::cerr << "ERROR: nanosleep()"
-            << std::endl;
+            << '\n';
 }
 
+static inline
 void absnanosleep(const time_t& seconds = 0,
                   const long& nanoseconds = 0) noexcept
 {
@@ -73,7 +73,7 @@ TEST(timeSupport, TimeSourceResolution)
     if ( ret )
     {
       std::cerr << "ERROR: clock_getres() error"
-                << std::endl;
+                << '\n';
     }
     else
     {
@@ -82,7 +82,7 @@ TEST(timeSupport, TimeSourceResolution)
                 << res.tv_sec
                 << " nsec = "
                 << res.tv_nsec
-                << std::endl;
+                << '\n';
     }
   }
 }
@@ -106,7 +106,7 @@ TEST(timeSupport, TimeSourceCurrentTime)
     if ( ret )
     {
       std::cerr << "ERROR: clock_gettime() error"
-                << std::endl;
+                << '\n';
     }
     else
     {
@@ -115,7 +115,7 @@ TEST(timeSupport, TimeSourceCurrentTime)
                 << res.tv_sec
                 << " nsec = "
                 << res.tv_nsec
-                << std::endl;
+                << '\n';
     }
   }
 }
@@ -124,13 +124,13 @@ TEST(timeSupport, stopCalledBeforeStart)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   auto s1 = rdtsct.getTimerStatus();
   rdtsct.stop("STOP-BEFORE-START");
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, s2);
 }
@@ -139,13 +139,13 @@ TEST(timeSupport, reportCalledWhenNotStopped)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   auto s1 = rdtsct.getTimerStatus();
   rdtsct.report();
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, s2);
 }
@@ -154,7 +154,7 @@ TEST(timeSupport, reStartAttempt)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   rdtsct.start("START-POINT-1");
   auto s1 = rdtsct.getTimerStatus();
@@ -162,7 +162,7 @@ TEST(timeSupport, reStartAttempt)
   rdtsct.start("START-POINT-3");
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, s2);
 }
@@ -171,7 +171,7 @@ TEST(timeSupport, reStopAttempt)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   rdtsct.start("START-POINT");
   rdtsct.stop("STOP-POINT-1");
@@ -180,7 +180,7 @@ TEST(timeSupport, reStopAttempt)
   rdtsct.stop("STOP-POINT-3");
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, s2);
 }
@@ -189,7 +189,7 @@ TEST(timeSupport, reReportAttempt)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   rdtsct.start("START-POINT");
   rdtsct.stop("STOP-POINT-1").report();
@@ -198,7 +198,7 @@ TEST(timeSupport, reReportAttempt)
   rdtsct.report().report();
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, s2);
 }
@@ -207,12 +207,12 @@ TEST(timeSupport, correctFullCycle)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   rdtsct.start("START-POINT").stop("STOP-POINT").report();
   auto s1 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::REPORTED);
 }
@@ -221,12 +221,12 @@ TEST(timeSupport, wrongFullCycle)
 {
   timeSupport::rdtscTimer rdtsct{"TIMER"};
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   rdtsct.report().stop("STOP-POINT").start("START-POINT");
   auto s1 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::STARTED);
 }
@@ -309,7 +309,7 @@ TEST(timeSupport, rdtscTest_3)
       {
         overruns = overruns + overrun;
       }
-      //std::cout << i << ": overrun of " << overrun << " ticks" << std::endl;
+      //std::cout << i << ": overrun of " << overrun << " ticks" << '\n';
     }
   }
 
@@ -319,7 +319,7 @@ TEST(timeSupport, rdtscTest_3)
             << " ticks over "
             << loopsNumber - doNotCount
             << " loops"
-            << std::endl;
+            << '\n';
 
   EXPECT_LE(overrunAverage,70);
 }
@@ -336,28 +336,28 @@ TEST(timeSupport, rdtscTest_4)
 
   // print the logs generated so far
   std::cout << "--------------"
-            << std::endl
+            << '\n'
             << ss.str()
             << "--------------"
-            << std::endl;
+            << '\n';
 
   rdtsct.start("START-POINT-B").stopAndReport("STOP-POINT-B");
 
   // print the logs generated so far
   std::cout << "--------------"
-            << std::endl
+            << '\n'
             << ss.str()
             << "--------------"
-            << std::endl;
+            << '\n';
 
   rdtsct.start("START-POINT-C").stopAndReport("STOP-POINT-C");
 
   // print the logs generated so far
   std::cout << "--------------"
-            << std::endl
+            << '\n'
             << ss.str()
             << "--------------"
-            << std::endl;
+            << '\n';
 }
 
 TEST(timeSupport, rdtscTest_5)
@@ -375,18 +375,18 @@ TEST(timeSupport, rdtscTest_5)
 
   // print the logs generated so far
   std::cout << "-------rdtscTest_5-------"
-            << std::endl
+            << '\n'
             << ss.str();
 
-  std::cout << "Ticks counted: " << rdtsct.getStopLapsedTSC() << std::endl;
+  std::cout << "Ticks counted: " << rdtsct.getStopLapsedTSC() << '\n';
 #ifdef CHRONO_TIME
-  std::cout << "sec   counted: " << rdtsct.getStopLapsed_sec() << std::endl;
-  std::cout << "msec  counted: " << rdtsct.getStopLapsed_msec() << std::endl;
-  std::cout << "usec  counted: " << rdtsct.getStopLapsed_usec() << std::endl;
-  std::cout << "nsec  counted: " << rdtsct.getStopLapsed_nsec() << std::endl;
+  std::cout << "sec   counted: " << rdtsct.getStopLapsed_sec() << '\n';
+  std::cout << "msec  counted: " << rdtsct.getStopLapsed_msec() << '\n';
+  std::cout << "usec  counted: " << rdtsct.getStopLapsed_usec() << '\n';
+  std::cout << "nsec  counted: " << rdtsct.getStopLapsed_nsec() << '\n';
 #endif
   std::cout << "-------------------------"
-            << std::endl;
+            << '\n';
 
 #ifdef CHRONO_TIME
   EXPECT_GE(rdtsct.getStopLapsed_sec(),  1.0);
@@ -408,15 +408,15 @@ TEST(timeSupport, rdtscTest_6)
 
     absnanosleep(10, 0);
     
-    std::cout << rdtsct << std::endl;
+    std::cout << rdtsct << '\n';
   } // rdtsct's dtor called: stop() and report() called
 
   // print the logs generated in the stringstream
   std::cout << "-------rdtscTest_6-------"
-            << std::endl
+            << '\n'
             << ss.str()
             << "-------------------------"
-            << std::endl;
+            << '\n';
 
   ASSERT_NE(ss.str(), "");
 }
@@ -445,15 +445,15 @@ TEST(timeSupport, rdtscTest_7)
       timeSupport::profileFunction(rdtsct, "START-PROFILE-F", "STOP-PROFILE-F", f, 1);
     }
 
-    std::cout << rdtsct << std::endl;
+    std::cout << rdtsct << '\n';
   } // rdtsct's dtor called
 
   // print the logs generated in the stringstream
   std::cout << "-------rdtscTest_7-------"
-            << std::endl
+            << '\n'
             << ss.str()
             << "-------------------------"
-            << std::endl;
+            << '\n';
 
   ASSERT_NE(ss.str(), "");
 }
@@ -461,7 +461,7 @@ TEST(timeSupport, rdtscTest_7)
 ////////////////////////////////////////////////////////////////////////////////
 // the following tests need su rights
 
-int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
+static int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
 {
   int ret{};
 
@@ -473,14 +473,14 @@ int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
   // set the priority to the maximum.
   params.sched_priority = sched_get_priority_max(algo);
 
-//  std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
+//  std::cout << "Trying to set thread realtime prio = " << params.sched_priority << '\n';
 
   // attempt to set thread real-time priority to the algo policy
   ret = pthread_setschedparam(this_thread, algo, &params);
   if ( 0 != ret )
   {
     // print the error
-    std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
+    std::cout << "Unsuccessful in setting thread realtime prio" << '\n';
     return -1;
   }
   // verify the change in thread priority
@@ -488,18 +488,18 @@ int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
   ret = pthread_getschedparam(this_thread, &policy, &params);
   if ( 0 != ret )
   {
-    std::cout << "Couldn't retrieve real-time scheduling paramers" << std::endl;
+    std::cout << "Couldn't retrieve real-time scheduling paramers" << '\n';
     return -1;
   }
 
   // check the correct policy was applied
   if ( policy != algo )
   {
-    std::cout << "Scheduling is NOT " << algo << std::endl;
+    std::cout << "Scheduling is NOT " << algo << '\n';
   }
 
   // print thread scheduling priority
-  //std::cout << "Thread priority is " << params.sched_priority << std::endl;
+  //std::cout << "Thread priority is " << params.sched_priority << '\n';
 
   return policy;
 }
@@ -507,17 +507,17 @@ int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
 TEST(timeSupport, rdtscTest_8)
 {
   constexpr int which{PRIO_PROCESS};
-  id_t pid{};
+  //id_t pid{};
   constexpr int priority{-20};
   int ret{};
   decltype(errno) errNo = errno;
 
-  pid = getpid();
-  ret = setpriority(which, pid, priority);
+  auto pid = getpid();
+  ret = setpriority(which, static_cast<id_t>(pid), priority);
   errNo = errno;
 
-  ASSERT_EQ(ret,0);
-  ASSERT_EQ(errNo,0);
+  EXPECT_EQ(ret,0);
+  EXPECT_EQ(errNo,0);
 
   // use SCHED_FIFO or SCHED_RR
   decltype(SCHED_FIFO) algo = SCHED_FIFO;
@@ -557,7 +557,7 @@ TEST(timeSupport, rdtscTest_8)
       {
         overruns = overruns + overrun;
       }
-      //std::cout << i << ": overrun of " << overrun << " ticks" << std::endl;
+      //std::cout << i << ": overrun of " << overrun << " ticks" << '\n';
     }
   }
 
@@ -567,14 +567,12 @@ TEST(timeSupport, rdtscTest_8)
             << " ticks over "
             << loopsNumber - doNotCount
             << " loops"
-            << std::endl;
+            << '\n';
 
-  std::cout << rdtsct << std::endl;
+  std::cout << rdtsct << '\n';
 
   EXPECT_LE(overrunAverage,70);
 }
-
-//int main(int argc, char **argv) {
-//  ::testing::InitGoogleTest(&argc, argv);
-//  return RUN_ALL_TESTS();
-//}
+////////////////////////////////////////////////////////////////////////////////
+#pragma clang diagnostic pop
+// END: ignore the warnings when compiled with clang up to here

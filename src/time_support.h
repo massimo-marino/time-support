@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /* 
  * File:   time_support.h
  * Author: massimo
@@ -18,9 +12,14 @@
 #include <chrono>
 #include <map>
 ////////////////////////////////////////////////////////////////////////////////
+#ifndef CHRONO_TIME
+#define CHRONO_TIME
+#endif
+////////////////////////////////////////////////////////////////////////////////
 namespace timeSupport
 {
-inline uint_fast64_t rdtscp() noexcept
+static inline
+uint_fast64_t rdtscp() noexcept
 {
   uint_fast32_t tickl {};
   uint_fast32_t tickh {};
@@ -30,7 +29,8 @@ inline uint_fast64_t rdtscp() noexcept
   return ((static_cast<uint_fast64_t>(tickh) << 32) | tickl);
 }
 
-inline void rdtscp(uint_fast64_t& r) noexcept
+static inline
+void rdtscp(uint_fast64_t& r) noexcept
 {
   uint_fast32_t tickl {};
   uint_fast32_t tickh {};
@@ -40,7 +40,7 @@ inline void rdtscp(uint_fast64_t& r) noexcept
   r = (static_cast<uint_fast64_t>(tickh) << 32) | tickl;
 }
 ////////////////////////////////////////////////////////////////////////////////
-class rdtscTimer
+class rdtscTimer final
 {
  public:
   enum class rdtscTimerStatus { INACTIVE, STARTED, STOPPED, REPORTED };
@@ -78,7 +78,7 @@ class rdtscTimer
     m_log << m_timerName << ": "
           << startPoint
           << ": ERROR: start() called but timer is already started"
-          << std::endl;
+          << '\n';
 
     return *this;
   }
@@ -99,7 +99,7 @@ class rdtscTimer
     m_log << m_timerName << ": "
           << stopPoint
           << ": ERROR: stop() called but timer is not started"
-          << std::endl;
+          << '\n';
 
     return *this;
   }
@@ -111,17 +111,17 @@ class rdtscTimer
 
   rdtscTimer& report() noexcept;
 
-  inline uint_fast64_t getStartTSC() noexcept
+  inline uint_fast64_t getStartTSC() const noexcept
   {
     return m_start;
   }
 
-  inline uint_fast64_t getStopTSC() noexcept
+  inline uint_fast64_t getStopTSC() const noexcept
   {
     return m_stop;
   }
 
-  inline uint_fast64_t getLapsedTSC() noexcept
+  inline uint_fast64_t getLapsedTSC() const noexcept
   {
     if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
@@ -130,7 +130,7 @@ class rdtscTimer
     return 0;
   }
 
-  inline uint_fast64_t getStopLapsedTSC() noexcept
+  inline uint_fast64_t getStopLapsedTSC() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -143,7 +143,7 @@ class rdtscTimer
   }
 
 #ifdef CHRONO_TIME
-  inline double getStopLapsed_sec() noexcept
+  inline double getStopLapsed_sec() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -157,42 +157,42 @@ class rdtscTimer
 #endif
 
 #ifdef CHRONO_TIME
-  inline uint_fast64_t getStopLapsed_msec() noexcept
+  inline uint_fast64_t getStopLapsed_msec() const noexcept
   {
     auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
     {
-      return (uint_fast64_t)(std::chrono::duration_cast<std::chrono::milliseconds>(m_tstop - m_tstart).count());
+      return static_cast<uint_fast64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(m_tstop - m_tstart).count());
     }
     return 0;
   }
 #endif
 
 #ifdef CHRONO_TIME
-  inline uint_fast64_t getStopLapsed_usec() noexcept
+  inline uint_fast64_t getStopLapsed_usec() const noexcept
   {
     auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
     {
-      return (uint_fast64_t)(std::chrono::duration_cast<std::chrono::microseconds>(m_tstop - m_tstart).count());
+      return static_cast<uint_fast64_t>(std::chrono::duration_cast<std::chrono::microseconds>(m_tstop - m_tstart).count());
     }
     return 0;
   }
 #endif
 
 #ifdef CHRONO_TIME
-  inline uint_fast64_t getStopLapsed_nsec() noexcept
+  inline uint_fast64_t getStopLapsed_nsec() const noexcept
   {
     auto&& s = getTimerStatus();
 
     if ( (rdtscTimerStatus::STOPPED == s) ||
          (rdtscTimerStatus::REPORTED == s) )
     {
-      return (uint_fast64_t)(std::chrono::duration_cast<std::chrono::nanoseconds>(m_tstop - m_tstart).count());
+      return static_cast<uint_fast64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(m_tstop - m_tstart).count());
     }
     return 0;
   }
@@ -219,6 +219,7 @@ class rdtscTimer
   mutable std::string m_startPointLabel{};
   mutable std::string m_stopPointLabel{};
   rdtscTimerStatus m_rdtscTimerStatus{rdtscTimerStatus::INACTIVE};
+  [[maybe_unused]] char padding[4] {0,0,0,0};
   uint_fast64_t m_start{};
   uint_fast64_t m_stop{};
 #ifdef CHRONO_TIME
@@ -244,6 +245,8 @@ decltype(auto) profileFunction =
     rdtsct.start(startPoint);
 
     // invoke function to profile on forwarded params
+    // C++17: not yet available
+    //std::invoke(std::forward<decltype(func)>(func), std::forward<decltype(params)>(params)...);
     std::forward<decltype(func)>(func)(std::forward<decltype(params)>(params)...);
 
     // stop timer and report elapsed time

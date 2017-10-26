@@ -8,6 +8,10 @@ The code is only for linux 64 bit arch and processors having the Time Stamp Coun
 
 ## Install and Run Unit Tests
 
+Some tests require su rights.
+Therefore, use `sudo` to run the tests.
+
+
 ```bash
 $ git clone https://github.com/massimo-marino/time-support.git
 $ cd time-support

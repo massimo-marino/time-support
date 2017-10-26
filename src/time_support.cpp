@@ -1,16 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /* 
  * File:   time_support.cpp
  * Author: massimo
  *
  * Created on May 15, 2017, 12:00 PM
  */
-
+// BEGIN: ignore the warnings listed below when compiled with clang from here
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+////////////////////////////////////////////////////////////////////////////////
 #include "time_support.h"
 #include <iomanip>
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +86,7 @@ rdtscTimer& rdtscTimer::report() noexcept
           << std::setprecision(5)
           << " nsec ]"
 #endif
-          << std::endl;
+          << '\n';
 
     setTimerStatus(rdtscTimerStatus::REPORTED);
 
@@ -97,7 +95,7 @@ rdtscTimer& rdtscTimer::report() noexcept
 
   m_log << m_timerName << ": "
         << ": ERROR: report() called but timer is not stopped"
-        << std::endl;
+        << '\n';
 
   return *this;
 }
@@ -109,26 +107,26 @@ std::ostream& operator<<(std::ostream& os, const rdtscTimer& obj)
   os << "> Timer "
      << obj.m_timerName
      << " is "
-     << (int)obj.getTimerStatus()
+     << static_cast<int>(obj.getTimerStatus())
      << "/"
      << obj.getTimerStatusString()
-     << std::endl
+     << '\n'
      << "> From: "
      << obj.m_startPointLabel
-     << std::endl
+     << '\n'
      << "> To:   "
      << obj.m_stopPointLabel
-     << std::endl
+     << '\n'
      << "> Start Tick: "
      << obj.m_start
-     << std::endl
+     << '\n'
      << "> Stop Tick:  "
      << obj.m_stop
-     << std::endl
+     << '\n'
 #ifdef CHRONO_TIME
      << "> Start Time Point: "
      << obj.m_tstart.time_since_epoch().count()
-     << std::endl
+     << '\n'
      << "> Stop Time Point:  "
      << obj.m_tstop.time_since_epoch().count()
 #endif
@@ -146,3 +144,6 @@ std::ostream& operator<<(std::ostream& os, const rdtscTimer& obj)
 //  return is;
 //}
 }  // namespace timeSupport
+////////////////////////////////////////////////////////////////////////////////
+#pragma clang diagnostic pop
+// END: ignore the warnings when compiled with clang up to here

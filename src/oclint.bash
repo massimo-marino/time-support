@@ -8,7 +8,7 @@
 #
 oclint -enable-global-analysis \
        -p ../build/Debug/GNU-Linux/_ext/71149f3b/ \
-       time_support.cpp \
+       *.cpp \
        -- -std=c++11 -m64 -Ofast -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -c -Werror -s -fPIC -MMD -MP
 
 #

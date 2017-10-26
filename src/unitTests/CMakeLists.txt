@@ -2,16 +2,22 @@ cmake_minimum_required(VERSION 3.5)
 
 PROJECT( timeSupport-unit-tests )
 
-SET (CMAKE_CXX_COMPILER g++)
+#### settings for g++
+#SET (CMAKE_CXX_COMPILER g++)
+#SET (CLANG_CXX_FLAGS "-Wno-unknown-pragmas")
+#### settings for g++
+
+#### settings for clang
+SET (CMAKE_CXX_COMPILER "clang++-4.0")
+SET (CLANG_CXX_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -fno-assume-sane-operator-new")
+####SET (CLANG_CXX_FLAGS "-Weverything -Wno-c++98-compat -fno-assume-sane-operator-new -fsanitize=undefined")
+#### settings for clang
+
+SET (CMAKE_CXX_FLAGS "${CLANG_CXX_FLAGS} -std=c++1z -flto -mtune=native -march=native -m64 -Ofast -ffast-math -pthread -pedantic -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -I/usr/include -I/usr/local/include -I. -I.. -lm -lrt -ldl -lgtest_dll -lgtest_main")
 
 SET (CMAKE_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu")
 
-## profile flag: -D_GLIBCXX_PROFILE
-SET (CMAKE_CXX_FLAGS "${ADD_CHRONO_TIME} -std=c++14 -flto -mtune=native -march=native -m64 -Ofast -pthread -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -I/usr/include -I/usr/local/include -I. -I.. -lm -lrt -ldl -lgtest_dll -lgtest_main")
-
 SET( CMAKE_VERBOSE_MAKEFILE on )
-
-SET (BUILD_SHARED_LIBS ON)
 
 # ------------------------- Begin Generic CMake Variable Logging ------------------
 
