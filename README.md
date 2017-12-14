@@ -1,9 +1,17 @@
 # time-support
-a C++14 implementation of a stopwatch (a timer) for testing speed at hot spots.
+a C++17 implementation of a stopwatch (a timer) for testing speed at hot spots.
 
 ## Requirements
 
-The cmake file compiles with `-std=c++14`.
+`cmake` is used to compile the sources.
+
+The default compiler used is `clang++-5.0`.
+
+The cmake files compile with `-std=c++17`.
+
+The unit tests are implemented in `googletest`: be sure you have installed `googletest` to compile.
+
+
 The code is only for linux 64 bit arch and processors having the Time Stamp Counter (TSC) register present. 
 
 ## Install and Run Unit Tests

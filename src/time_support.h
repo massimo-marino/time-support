@@ -60,11 +60,7 @@ class rdtscTimer final
        )
     {
       setTimerStatus(rdtscTimerStatus::STARTED);
-      if ( "" == startPoint )
-      {
-        m_startPointLabel = m_timerName + m_startPointLabelDefault;
-      }
-      else
+      if ( "" != startPoint )
       {
         m_startPointLabel = startPoint;
       }
