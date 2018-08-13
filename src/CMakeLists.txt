@@ -1,17 +1,18 @@
 cmake_minimum_required(VERSION 3.5)
 
-PROJECT( timeSupport-lib )
+PROJECT( time_support-lib )
 
 ################################################################################
 #### settings for clang 5.0
-SET (CMAKE_CXX_COMPILER "clang++-5.0")
-SET (CLANG_CXX_FLAGS "-std=c++17 -Ofast -ffast-math -pthread -pedantic -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -fno-assume-sane-operator-new -flto")
+SET (CMAKE_CXX_COMPILER "/clang_5.0.0/bin/clang++-5.0")
+SET (CMAKE_INCLUDE_PATH "-I. -I/clang_5.0.0/include/c++/v1" )
+SET (CLANG_CXX_FLAGS "${CMAKE_INCLUDE_PATH} -std=c++17 -Ofast -ffast-math -pthread -pedantic -pedantic-errors -Wall -Weffc++ -Wextra -Wfatal-errors -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -fno-assume-sane-operator-new")
 ####SET (CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -fsanitize=undefined")
 SET (CMAKE_CXX_FLAGS "${CLANG_CXX_FLAGS} -mtune=native -march=native -m64 -lm -lpthread")
 ### use libstdc++
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+#SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 ### use libc++
-#SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 SET (CMAKE_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu")
 ################################################################################
 
@@ -177,4 +178,3 @@ SET( sources_list time_support.cpp )
 ADD_LIBRARY( timeSupport ${sources_list} )
 
 TARGET_INCLUDE_DIRECTORIES (timeSupport PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
