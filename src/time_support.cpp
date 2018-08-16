@@ -17,15 +17,15 @@ namespace timeSupport
 const std::string rdtscTimer::m_startPointLabelDefault{"-CTOR-START"};
 const std::string rdtscTimer::m_stopPointLabelDefault{"-DTOR-STOP"};
 
-std::map<rdtscTimer::rdtscTimerStatus,std::string> rdtscTimer::timerStatusStringMap{
-    {rdtscTimer::rdtscTimerStatus::INACTIVE, "INACTIVE"},
-    {rdtscTimer::rdtscTimerStatus::STARTED,  "STARTED"},
-    {rdtscTimer::rdtscTimerStatus::STOPPED,  "STOPPED"},
-    {rdtscTimer::rdtscTimerStatus::REPORTED, "REPORTED"}
+std::unordered_map<rdtscTimer::mapKey, std::string> rdtscTimer::timerStatusStringMap {
+    {static_cast<rdtscTimer::mapKey>(rdtscTimer::rdtscTimerStatus::INACTIVE), "INACTIVE"},
+    {static_cast<rdtscTimer::mapKey>(rdtscTimer::rdtscTimerStatus::STARTED),  "STARTED"},
+    {static_cast<rdtscTimer::mapKey>(rdtscTimer::rdtscTimerStatus::STOPPED),  "STOPPED"},
+    {static_cast<rdtscTimer::mapKey>(rdtscTimer::rdtscTimerStatus::REPORTED), "REPORTED"}
   };
 
 rdtscTimer::rdtscTimer(const std::string& timerName,
-                       std::ostream& log)
+                       std::ostream& log) noexcept
 :
 m_timerName{timerName},
 m_startPointLabel(m_timerName + m_startPointLabelDefault),
@@ -34,7 +34,7 @@ m_rdtscTimerStatus(rdtscTimerStatus::INACTIVE),
 m_log(log)
 {}
 
-rdtscTimer::~rdtscTimer()
+rdtscTimer::~rdtscTimer() noexcept
 {
   // take the stop time and store it in temporary vars, in case it is needed later
   uint_fast64_t&& stop = rdtscp();
@@ -65,7 +65,8 @@ rdtscTimer::~rdtscTimer()
   }
 }
 
-rdtscTimer& rdtscTimer::report() noexcept
+rdtscTimer&
+rdtscTimer::report() noexcept
 {
   if ( rdtscTimerStatus::STOPPED == getTimerStatus() )
   {

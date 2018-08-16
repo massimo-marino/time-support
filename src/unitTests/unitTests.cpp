@@ -1,4 +1,8 @@
+//
+//  unitTests.cpp
+//
 #include "../time_support.h"
+
 #include <typeinfo>
 #include <sys/resource.h>
 #include <vector>
@@ -11,16 +15,19 @@ using namespace ::testing;
 using tspec = struct timespec;
 // BEGIN: ignore the warnings listed below when compiled with clang from here
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 ////////////////////////////////////////////////////////////////////////////////
-[[maybe_unused]] static inline
-void nanoSleep(const time_t& seconds = 0,
-               const long& nanoseconds = 0) noexcept
+[[maybe_unused]]
+static inline
+void
+nanoSleep(const time_t& seconds = 0,
+          const long& nanoseconds = 0) noexcept
 {
   tspec&& req = { seconds, nanoseconds };
-  tspec&& rem{};
-  int ret{};
+  tspec&& rem {};
+  int ret {};
 
   RETRY:
   ret = nanosleep (&req, &rem);
@@ -40,11 +47,12 @@ void nanoSleep(const time_t& seconds = 0,
 }
 
 static inline
-void absnanosleep(const time_t& seconds = 0,
-                  const long& nanoseconds = 0) noexcept
+void
+absnanosleep(const time_t& seconds = 0,
+             const long& nanoseconds = 0) noexcept
 {
   static const clockid_t&& clock{CLOCK_REALTIME};
-  tspec&& ts{};
+  tspec&& ts {};
 
   clock_gettime(clock, &ts);
 
@@ -56,7 +64,7 @@ void absnanosleep(const time_t& seconds = 0,
 ////////////////////////////////////////////////////////////////////////////////
 TEST(timeSupport, TimeSourceResolution)
 {
-  const std::vector<std::pair<std::string,clockid_t>> clockv{
+  const std::vector<std::pair<std::string,clockid_t>> clockv {
     {"CLOCK_REALTIME", CLOCK_REALTIME},
     {"CLOCK_MONOTONIC", CLOCK_MONOTONIC},
     {"CLOCK_PROCESS_CPUTIME_ID", CLOCK_PROCESS_CPUTIME_ID},
@@ -66,8 +74,8 @@ TEST(timeSupport, TimeSourceResolution)
 
   for (auto&& p : clockv)
   {
-    tspec&& res{};
-    int ret{};
+    tspec&& res {};
+    int ret {};
 
     ret = clock_getres(p.second, &res);
     if ( ret )
@@ -89,7 +97,7 @@ TEST(timeSupport, TimeSourceResolution)
 
 TEST(timeSupport, TimeSourceCurrentTime)
 {
-  const std::vector<std::pair<std::string,clockid_t>> clockv{
+  const std::vector<std::pair<std::string,clockid_t>> clockv {
     {"CLOCK_REALTIME", CLOCK_REALTIME},
     {"CLOCK_MONOTONIC", CLOCK_MONOTONIC},
     {"CLOCK_PROCESS_CPUTIME_ID", CLOCK_PROCESS_CPUTIME_ID},
@@ -99,8 +107,8 @@ TEST(timeSupport, TimeSourceCurrentTime)
   
   for (auto&& p : clockv)
   {
-    tspec&& res{};
-    int ret{};
+    tspec&& res {};
+    int ret {};
 
     ret = clock_gettime(p.second, &res);
     if ( ret )
@@ -122,39 +130,39 @@ TEST(timeSupport, TimeSourceCurrentTime)
 
 TEST(timeSupport, stopCalledBeforeStart)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   auto s1 = rdtsct.getTimerStatus();
   rdtsct.stop("STOP-BEFORE-START");
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, s2);
 }
 
 TEST(timeSupport, reportCalledWhenNotStopped)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   auto s1 = rdtsct.getTimerStatus();
   rdtsct.report();
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, s2);
 }
 
 TEST(timeSupport, reStartAttempt)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   rdtsct.start("START-POINT-1");
   auto s1 = rdtsct.getTimerStatus();
@@ -162,16 +170,16 @@ TEST(timeSupport, reStartAttempt)
   rdtsct.start("START-POINT-3");
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, s2);
 }
 
 TEST(timeSupport, reStopAttempt)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   rdtsct.start("START-POINT");
   rdtsct.stop("STOP-POINT-1");
@@ -180,16 +188,16 @@ TEST(timeSupport, reStopAttempt)
   rdtsct.stop("STOP-POINT-3");
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, s2);
 }
 
 TEST(timeSupport, reReportAttempt)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   rdtsct.start("START-POINT");
   rdtsct.stop("STOP-POINT-1").report();
@@ -198,35 +206,35 @@ TEST(timeSupport, reReportAttempt)
   rdtsct.report().report();
   auto s2 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, s2);
 }
 
 TEST(timeSupport, correctFullCycle)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   rdtsct.start("START-POINT").stop("STOP-POINT").report();
   auto s1 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::REPORTED);
 }
 
 TEST(timeSupport, wrongFullCycle)
 {
-  timeSupport::rdtscTimer rdtsct{"TIMER"};
+  timeSupport::rdtscTimer rdtsct {"TIMER"};
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   rdtsct.report().stop("STOP-POINT").start("START-POINT");
   auto s1 = rdtsct.getTimerStatus();
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
   ASSERT_EQ(s1, timeSupport::rdtscTimer::rdtscTimerStatus::STARTED);
 }
@@ -234,9 +242,9 @@ TEST(timeSupport, wrongFullCycle)
 TEST(timeSupport, rdtscTest_1)
 {
   // Only declared. Never used, so no time is measured and no logs are generated
-  timeSupport::rdtscTimer rdtsct_1{"T1"};
-  timeSupport::rdtscTimer rdtsct_2{"T2"};
-  timeSupport::rdtscTimer rdtsct_3{"T3"};
+  timeSupport::rdtscTimer rdtsct_1 {"T1"};
+  timeSupport::rdtscTimer rdtsct_2 {"T2"};
+  timeSupport::rdtscTimer rdtsct_3 {"T3"};
 
   auto s1 = rdtsct_1.getTimerStatus();
   auto s2 = rdtsct_2.getTimerStatus();
@@ -250,11 +258,11 @@ TEST(timeSupport, rdtscTest_1)
 TEST(timeSupport, rdtscTest_2)
 {
   // all logs to std::cout by default
-  timeSupport::rdtscTimer rdtsct_1{"T1"};
-  timeSupport::rdtscTimer rdtsct_2{"T2"};
-  timeSupport::rdtscTimer rdtsct_3{"T3"};
-  timeSupport::rdtscTimer rdtsct_4{"T4"};
-  timeSupport::rdtscTimer rdtsct_5{"T5"};
+  timeSupport::rdtscTimer rdtsct_1 {"T1"};
+  timeSupport::rdtscTimer rdtsct_2 {"T2"};
+  timeSupport::rdtscTimer rdtsct_3 {"T3"};
+  timeSupport::rdtscTimer rdtsct_4 {"T4"};
+  timeSupport::rdtscTimer rdtsct_5 {"T5"};
 
   rdtsct_1.start("START-POINT-A").stop("STOP-POINT-A");
 
@@ -277,14 +285,14 @@ TEST(timeSupport, rdtscTest_2)
 TEST(timeSupport, rdtscTest_3)
 {
   // logs to std::cout by default
-  timeSupport::rdtscTimer rdtsct{"T1"};
-  constexpr uint_fast64_t waitTicks{10'000};
-  constexpr uint_fast64_t loopsNumber{1'000'000};
-  uint_fast64_t overruns{0};
-  uint_fast64_t doNotCount{0};
-  uint_fast64_t loopStop{};
+  timeSupport::rdtscTimer rdtsct {"T1"};
+  constexpr uint_fast64_t waitTicks {10'000};
+  constexpr uint_fast64_t loopsNumber {1'000'000};
+  uint_fast64_t overruns {0};
+  uint_fast64_t doNotCount {0};
+  uint_fast64_t loopStop {0};
 
-  for (uint_fast64_t&& i{1}; i <= loopsNumber; ++i)
+  for (uint_fast64_t&& i {1}; i <= loopsNumber; ++i)
   {
     // start counting and set the stop tick
     loopStop = waitTicks + rdtsct.start("START-POINT-A").getStartTSC();
@@ -321,14 +329,14 @@ TEST(timeSupport, rdtscTest_3)
             << " loops"
             << '\n';
 
-  EXPECT_LE(overrunAverage,70);
+  EXPECT_LE(overrunAverage,80);
 }
 
 TEST(timeSupport, rdtscTest_4)
 {
   // store all the logs generated by the class in a stringstream
-  std::stringstream ss{};
-  timeSupport::rdtscTimer rdtsct{"T4", ss};
+  std::stringstream ss {};
+  timeSupport::rdtscTimer rdtsct {"T4", ss};
 
   // NOTE: report() MUST be called after stop(), otherwise nothing is written in
   //       the stringstream
@@ -363,8 +371,8 @@ TEST(timeSupport, rdtscTest_4)
 TEST(timeSupport, rdtscTest_5)
 {
   // store all the logs generated by the class in a stringstream
-  std::stringstream ss{};
-  timeSupport::rdtscTimer rdtsct{"T5", ss};
+  std::stringstream ss {};
+  timeSupport::rdtscTimer rdtsct {"T5", ss};
 
   rdtsct.start("START-POINT-A");
 
@@ -399,16 +407,16 @@ TEST(timeSupport, rdtscTest_5)
 TEST(timeSupport, rdtscTest_6)
 {
   // store all the logs generated by the class in a stringstream
-  std::stringstream ss{};
+  std::stringstream ss {};
 
   {
-    timeSupport::rdtscTimer rdtsct{"T6", ss};
+    timeSupport::rdtscTimer rdtsct {"T6", ss};
 
     rdtsct.start("START-POINT-A");
 
     absnanosleep(10, 0);
-    
-    std::cout << rdtsct << '\n';
+
+    rdtsct();
   } // rdtsct's dtor called: stop() and report() called
 
   // print the logs generated in the stringstream
@@ -424,7 +432,7 @@ TEST(timeSupport, rdtscTest_6)
 TEST(timeSupport, rdtscTest_7)
 {
   // store all the logs generated by the class in a stringstream
-  std::stringstream ss{};
+  std::stringstream ss {};
 
   {
     // function to profile
@@ -433,19 +441,19 @@ TEST(timeSupport, rdtscTest_7)
     // function to profile
     decltype(auto) f = [](const time_t& seconds){ absnanosleep(seconds,0); };
 
-    timeSupport::rdtscTimer rdtsct{"T7", ss};
+    timeSupport::rdtscTimer rdtsct {"T7", ss};
 
-    for (unsigned int&& i = 1; i < 100; ++i)
+    for (unsigned int&& i {1}; i < 100; ++i)
     {
       timeSupport::profileFunction(rdtsct, "START-PROFILE-NOFUN", "STOP-PROFILE-NOFUN", nofun);
     }
     
-    for (unsigned int&& i = 1; i < 20; ++i)
+    for (unsigned int&& i {1}; i < 20; ++i)
     {
       timeSupport::profileFunction(rdtsct, "START-PROFILE-F", "STOP-PROFILE-F", f, 1);
     }
 
-    std::cout << rdtsct << '\n';
+    rdtsct();
   } // rdtsct's dtor called
 
   // print the logs generated in the stringstream
@@ -459,16 +467,17 @@ TEST(timeSupport, rdtscTest_7)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// the following tests need su rights
+// the following tests need super user rights
+// they fail when run as a user with standard privileges
 
 static int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
 {
-  int ret{};
+  int ret {};
 
   // work on the currently running thread.
-  pthread_t this_thread{pthread_self()};
+  pthread_t this_thread {pthread_self()};
   // struct sched_param is used to store the scheduling priority
-  struct sched_param params{};
+  struct sched_param params {};
 
   // set the priority to the maximum.
   params.sched_priority = sched_get_priority_max(algo);
@@ -506,10 +515,9 @@ static int setRealtimePriority(const int algo = SCHED_FIFO) noexcept
 
 TEST(timeSupport, rdtscTest_8)
 {
-  constexpr int which{PRIO_PROCESS};
-  //id_t pid{};
-  constexpr int priority{-20};
-  int ret{};
+  constexpr int which {PRIO_PROCESS};
+  constexpr int priority {-20};
+  int ret {};
   decltype(errno) errNo = errno;
 
   auto pid = getpid();
@@ -525,14 +533,14 @@ TEST(timeSupport, rdtscTest_8)
   ASSERT_EQ(setRealtimePriority(algo),algo);
 
   // logs to std::cout by default
-  timeSupport::rdtscTimer rdtsct{"T8"};
-  constexpr uint_fast64_t waitTicks{10'000};
-  constexpr uint_fast64_t loopsNumber{2'000'000};
-  uint_fast64_t overruns{0};
-  uint_fast64_t doNotCount{0};
-  uint_fast64_t loopStop{};
+  timeSupport::rdtscTimer rdtsct {"T8"};
+  constexpr uint_fast64_t waitTicks {10'000};
+  constexpr uint_fast64_t loopsNumber {2'000'000};
+  uint_fast64_t overruns {0};
+  uint_fast64_t doNotCount {0};
+  uint_fast64_t loopStop {0};
 
-  for (uint_fast64_t&& i{1}; i <= loopsNumber; ++i)
+  for (uint_fast64_t&& i {1}; i <= loopsNumber; ++i)
   {
     // start counting and set the stop tick
     loopStop = waitTicks + rdtsct.start("START-POINT-A").getStartTSC();
@@ -569,9 +577,9 @@ TEST(timeSupport, rdtscTest_8)
             << " loops"
             << '\n';
 
-  std::cout << rdtsct << '\n';
+  rdtsct();
 
-  EXPECT_LE(overrunAverage,70);
+  EXPECT_LE(overrunAverage,80);
 }
 ////////////////////////////////////////////////////////////////////////////////
 #pragma clang diagnostic pop

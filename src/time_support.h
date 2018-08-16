@@ -4,13 +4,12 @@
  *
  * Created on May 16, 2017, 2:12 PM
  */
-
-#ifndef TIME_SUPPORT_H
-#define TIME_SUPPORT_H
+#pragma once
 
 #include <iostream>
 #include <chrono>
-#include <map>
+#include <unordered_map>
+#include <functional>
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef CHRONO_TIME
 #define CHRONO_TIME
@@ -18,39 +17,45 @@
 ////////////////////////////////////////////////////////////////////////////////
 namespace timeSupport
 {
-static inline
-uint_fast64_t rdtscp() noexcept
+inline
+uint_fast64_t
+rdtscp() noexcept
 {
-  uint_fast32_t tickl {};
-  uint_fast32_t tickh {};
+  volatile uint_fast32_t tickl {};
+  volatile uint_fast32_t tickh {};
 
-  __asm__ __volatile__("rdtscp":"=a"(tickl), "=d"(tickh) ::);
+  __asm__ __volatile__("rdtscp" : "=a"(tickl), "=d"(tickh) ::);
 
   return ((static_cast<uint_fast64_t>(tickh) << 32) | tickl);
 }
 
-static inline
-void rdtscp(uint_fast64_t& r) noexcept
+inline
+void
+rdtscp(uint_fast64_t& r) noexcept
 {
-  uint_fast32_t tickl {};
-  uint_fast32_t tickh {};
+  volatile uint_fast32_t tickl {};
+  volatile uint_fast32_t tickh {};
 
-  __asm__ __volatile__("rdtscp":"=a"(tickl), "=d"(tickh) ::);
+  __asm__ __volatile__("rdtscp" : "=a"(tickl), "=d"(tickh) ::);
 
   r = (static_cast<uint_fast64_t>(tickh) << 32) | tickl;
 }
 ////////////////////////////////////////////////////////////////////////////////
 class rdtscTimer final
 {
+  using mapKey = unsigned int;
+
  public:
   enum class rdtscTimerStatus { INACTIVE, STARTED, STOPPED, REPORTED };
 
   explicit rdtscTimer(const std::string& timerName = "rdtscTimer",
-                      std::ostream& log = std::cout);
+                      std::ostream& log = std::cout) noexcept;
 
-  ~rdtscTimer();
+  ~rdtscTimer() noexcept;
 
-  inline rdtscTimer& start(const std::string& startPoint = "") noexcept
+  constexpr
+  rdtscTimer&
+  start(const std::string& startPoint = "") noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -79,7 +84,9 @@ class rdtscTimer final
     return *this;
   }
 
-  inline rdtscTimer& stop(const std::string& stopPoint) noexcept
+  constexpr
+  rdtscTimer&
+  stop(const std::string& stopPoint) noexcept
   {
     if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
@@ -100,24 +107,31 @@ class rdtscTimer final
     return *this;
   }
 
-  inline void stopAndReport(const std::string& stopPoint) noexcept
+  void
+  stopAndReport(const std::string& stopPoint) noexcept
   {
     stop(stopPoint).report();
   }
 
   rdtscTimer& report() noexcept;
 
-  inline uint_fast64_t getStartTSC() const noexcept
+  constexpr
+  uint_fast64_t
+  getStartTSC() const noexcept
   {
     return m_start;
   }
 
-  inline uint_fast64_t getStopTSC() const noexcept
+  constexpr
+  uint_fast64_t
+  getStopTSC() const noexcept
   {
     return m_stop;
   }
 
-  inline uint_fast64_t getLapsedTSC() const noexcept
+  constexpr
+  uint_fast64_t
+  getLapsedTSC() const noexcept
   {
     if ( rdtscTimerStatus::STARTED == getTimerStatus() )
     {
@@ -126,7 +140,9 @@ class rdtscTimer final
     return 0;
   }
 
-  inline uint_fast64_t getStopLapsedTSC() const noexcept
+  constexpr
+  uint_fast64_t
+  getStopLapsedTSC() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -139,7 +155,9 @@ class rdtscTimer final
   }
 
 #ifdef CHRONO_TIME
-  inline double getStopLapsed_sec() const noexcept
+  constexpr
+  double
+  getStopLapsed_sec() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -153,7 +171,9 @@ class rdtscTimer final
 #endif
 
 #ifdef CHRONO_TIME
-  inline uint_fast64_t getStopLapsed_msec() const noexcept
+  constexpr
+  uint_fast64_t
+  getStopLapsed_msec() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -167,7 +187,9 @@ class rdtscTimer final
 #endif
 
 #ifdef CHRONO_TIME
-  inline uint_fast64_t getStopLapsed_usec() const noexcept
+  constexpr
+  uint_fast64_t
+  getStopLapsed_usec() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -181,7 +203,9 @@ class rdtscTimer final
 #endif
 
 #ifdef CHRONO_TIME
-  inline uint_fast64_t getStopLapsed_nsec() const noexcept
+  constexpr
+  uint_fast64_t
+  getStopLapsed_nsec() const noexcept
   {
     auto&& s = getTimerStatus();
 
@@ -194,28 +218,38 @@ class rdtscTimer final
   }
 #endif
 
-  inline const std::string getTimerStatusString() const noexcept
+  const std::string&
+  getTimerStatusString() const noexcept
   {
-    return timerStatusStringMap[getTimerStatus()];
+    return timerStatusStringMap[static_cast<mapKey>(getTimerStatus())];
   }
 
-  inline rdtscTimerStatus getTimerStatus() const noexcept
+  constexpr
+  rdtscTimerStatus
+  getTimerStatus() const noexcept
   {
     return m_rdtscTimerStatus;
+  }
+
+  void
+  operator()() const noexcept
+  {
+    m_log << "\n<------------------------------------------------------------------->\n"
+          << *this
+          << "\n<------------------------------------------------------------------->\n";
   }
 
   friend std::ostream& operator<<(std::ostream& os, const rdtscTimer& obj);
 //  friend std::istream& operator>>(std::istream& is, rdtscTimer& obj);
 
  private:
-  static std::map<rdtscTimerStatus,std::string> timerStatusStringMap;
+  static std::unordered_map<mapKey, std::string> timerStatusStringMap;
   static const std::string m_startPointLabelDefault;
   static const std::string m_stopPointLabelDefault;
   const std::string m_timerName{};
   mutable std::string m_startPointLabel{};
   mutable std::string m_stopPointLabel{};
-  rdtscTimerStatus m_rdtscTimerStatus{rdtscTimerStatus::INACTIVE};
-  [[maybe_unused]] char padding[4] {0,0,0,0};
+  mutable rdtscTimerStatus m_rdtscTimerStatus{rdtscTimerStatus::INACTIVE};
   uint_fast64_t m_start{};
   uint_fast64_t m_stop{};
 #ifdef CHRONO_TIME
@@ -224,30 +258,33 @@ class rdtscTimer final
 #endif
   std::ostream& m_log{std::cout};
 
-  inline void setTimerStatus (const rdtscTimerStatus& s) noexcept
+  void
+  setTimerStatus (const rdtscTimerStatus& s) const noexcept
   {
     m_rdtscTimerStatus = s;
   }
 };  // class rdtscTimer
 
 // generic lambda (C++14 onwards)
-decltype(auto) profileFunction =
-  [](rdtscTimer& rdtsct,
-     const std::string&& startPoint,
-     const std::string&& stopPoint,
-     auto&& func, auto&&... params) // C++14's universal references aka forwarding references
-  {
-    // start timer
-    rdtsct.start(startPoint);
+decltype(auto)
+profileFunction = [] (rdtscTimer& rdtsct,
+                      const std::string&& startPoint,
+                      const std::string&& stopPoint,
+                      auto&& func, auto&&... params) noexcept(false) -> void // C++14's universal references aka forwarding references
+{
+  // start timer
+  rdtsct.start(startPoint);
 
-    // invoke function to profile on forwarded params
-    // C++17: not yet available
-    //std::invoke(std::forward<decltype(func)>(func), std::forward<decltype(params)>(params)...);
-    std::forward<decltype(func)>(func)(std::forward<decltype(params)>(params)...);
-
-    // stop timer and report elapsed time
-    rdtsct.stop(stopPoint).report();
-  };
+  // invoke function to profile on forwarded params
+#ifdef CALL_STD_FORWARD // define this macro in this case (used in the unit tests)
+  // std::forward() until C++17
+  std::forward<decltype(func)>(func)(std::forward<decltype(params)>(params)...);
+#else
+  // std::invoke() from C++17
+  std::invoke(std::forward<decltype(func)>(func), std::forward<decltype(params)>(params)...);
+#endif
+  // stop timer and report elapsed time
+  rdtsct.stop(stopPoint).report();
+};
 ////////////////////////////////////////////////////////////////////////////////
 }  // namespace timeSupport
-#endif /* TIME_SUPPORT_H */
